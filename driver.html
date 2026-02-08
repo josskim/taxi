@@ -1,21 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>기사 위치 전송</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<div class="container" style="max-width:600px; margin:0 auto; padding:8px;">
+  <h2>🚕 기사 위치 전송</h2>
 
-<h2>🚕 기사 위치 전송..</h2>
+  <div id="setup" class="card" style="display:none;">
+    <p style="margin:0 0 8px;">기사 이름을 입력하세요</p>
+    <input id="name" placeholder="예: 스테이남천" class="input" />
+    <button onclick="saveName()">확인</button>
+  </div>
 
-<div id="setup" style="display:none;">
-  <p>기사 이름을 입력하세요</p>
-  <input id="name" placeholder="예: 스테이남천">
-  <button onclick="saveName()">확인</button>
+  <p id="status" class="card" style="margin-top:8px; padding:10px 12px;"></p>
+  <button class="secondary" onclick="changeName()">기사 이름 변경</button>
 </div>
-
-<p id="status"></p>
-<button onclick="changeName()">기사 이름 변경</button>
 
 <script>
 let driverId = localStorage.getItem("driverId");
@@ -25,7 +28,7 @@ function saveName(){
   if(driverId === "") return;
 
   localStorage.setItem("driverId", driverId);
-  setup.style.display = "none";
+  document.getElementById("setup").style.display = "none";
   startGPS();   // 이름 저장 후에만 GPS 시작
 }
 
@@ -36,11 +39,11 @@ function changeName(){
 
 function startGPS(){
   if(!driverId){
-    setup.style.display = "block";
+    document.getElementById("setup").style.display = "block";
     return;   // 🔥 이름 없으면 GPS 절대 시작 안함
   }
 
-  status.innerText = "기사 ["+driverId+"] 위치 전송중";
+  document.getElementById("status").innerText = "기사 ["+driverId+"] 위치 전송중";
 
   setInterval(()=>{
     navigator.geolocation.getCurrentPosition(pos=>{
