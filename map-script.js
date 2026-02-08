@@ -2,10 +2,28 @@ let map;
 let markers = {};
 let infowindow;
 
-function initMap() {
+// 1. 초기 지도 설정 (비동기)
+async function initMap() {
+  let initialCenter = {lat: 35.7384, lng: 128.7334}; // 기본 좌표
+  const myDeviceId = localStorage.getItem("deviceId");
+
+  try {
+    const response = await fetch('/gps');
+    const data = await response.json();
+
+    // 내 기기 ID가 서버 데이터에 존재하면 해당 좌표를 중심으로 설정
+    if (myDeviceId && data[myDeviceId]) {
+      const myInfo = data[myDeviceId];
+      initialCenter = { lat: myInfo.lat, lng: myInfo.lng };
+      console.log("내 위치로 시작합니다:", myInfo.id);
+    }
+  } catch (e) {
+    console.error("초기 데이터 로드 실패:", e);
+  }
+
   map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 17, //기존 14 → 16으로 상승 해서 4배더 확대 함.
-    center: {lat: 35.7384, lng: 128.7334}
+    zoom: 17,
+    center: initialCenter
   });
 
   infowindow = new google.maps.InfoWindow();
@@ -14,66 +32,41 @@ function initMap() {
   setInterval(loadGPS, 3000);
 }
 
-
-
-
-function getOffset(index) {
-  const offset = 0.00005;
-  return (index % 5) * offset;
-}
-
+// 2. 실시간 마커 업데이트
 function loadGPS() {
-  if (!map) {
-    console.warn("Map is not initialized yet");
-    return;
-  }
+  if (!map) return;
 
   fetch('/gps')
     .then(r => r.json())
     .then(data => {
-      let i = 0;
-      for (let id in data) {
-        let baseLat = data[id].lat;
-        let baseLng = data[id].lng;
+      for (let devId in data) {
+        const info = data[devId];
+        const pos = { lat: info.lat, lng: info.lng };
+        const driverName = info.id;
 
-        let pos = {
-          lat: baseLat + getOffset(i),
-          lng: baseLng + getOffset(i + 2)
-        };
-
-        let color = "#ff3b3b";
-
-        if (!markers[id]) {
+        if (!markers[devId]) {
+          // 신규 마커 생성 (deviceId를 키로 사용)
           let marker = new google.maps.Marker({
             position: pos,
             map: map,
-            label: {
-              text: id, // "스테이남천", "종엽" 전체 이름 표시
-              color: "#333",
-              fontWeight: "bold",
-              fontSize: "12px",
-              className: "marker-label" // CSS에서 제어하기 위한 클래스명
-            },
+            label: { text: driverName, className: "marker-label" },
             icon: {
               url: "./image/man.png",
               scaledSize: new google.maps.Size(40, 40),
-              origin: new google.maps.Point(0, 0),
               anchor: new google.maps.Point(20, 40)
             }
           });
 
           marker.addListener('click', () => {
-            infowindow.setContent(id + " 위치");
+            infowindow.setContent("<b>" + driverName + "</b> 기사님");
             infowindow.open(map, marker);
           });
-
-          markers[id] = marker;
+          markers[devId] = marker;
         } else {
-          markers[id].setPosition(pos);
+          // 기존 마커 업데이트
+          markers[devId].setPosition(pos);
+          markers[devId].setLabel({text: driverName, className: "marker-label"});
         }
-
-        i++;
       }
-    })
-    .catch(e => console.error("GPS load error:", e));
+    });
 }

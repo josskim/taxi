@@ -8,6 +8,7 @@
   --primaryDark: #005a9e;
   --border: #e5e7eb;
 }
+
 *{box-sizing:border-box}
 html, body { height: 100%; }
 body {
@@ -16,31 +17,84 @@ body {
   background: var(--bg);
   color: var(--text);
 }
+
 .container{ max-width: 1024px; margin: 0 auto; padding: 16px; }
 .header{ display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
 h2, h3, h4{ margin: 0 0 12px; }
-.map{ width: 100%; height: 420px; border: 1px solid var(--border); border-radius: 8px; background:#e9eef7; }
+
+/* 지도 스타일 */
+.map{ width: 100%; height: 420px; border: 1px solid var(--border); border-radius: 8px; background:#e9eef7; margin-bottom: 12px;}
+
+/* 기본 카드 및 입력창 */
 .card{ background: white; border:1px solid var(--border); border-radius:8px; padding:14px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
 .input, input, textarea, select { font: inherit; padding: 12px 14px; border-radius:8px; border:1px solid #ccd; width: 100%; margin-bottom: 12px; }
+
+/* 기본 버튼 */
 button{ padding:12px 16px; border-radius:8px; border:1px solid #ccc; background: var(--primary); color:white; font-weight:600; cursor:pointer; }
 button.secondary{ background:#f1f5f9; color:#111; border:1px solid #ccd; }
 button:focus{ outline: none; box-shadow: 0 0 0 3px rgba(0,120,215,.25); }
-#msg{ min-height:22px; text-align:center; font-weight:500; }
+
+#msg{ min-height:22px; text-align:center; font-weight:500; margin-top: 8px; }
+
+/* --- 가로 정렬 핵심 로직 (강제 적용을 위해 클래스 상세 지정) --- */
+
+/* 검색창 한 줄 정렬 */
+.search-box {
+  display: flex !important;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* 호출 입력창 한 줄 정렬 */
+.card.call-form {
+  display: flex !important;
+  gap: 8px;
+  align-items: center; /* 높이 중앙 정렬 */
+  flex-wrap: nowrap;   /* 줄바꿈 금지 */
+}
+
+/* 가로 정렬 시 input의 너비 100% 해제 및 마진 제거 */
+.search-box .input, 
+.card.call-form .input {
+  width: auto !important; /* 기존 100% 해제 */
+  flex: 1 !important;     /* 균등 배분 */
+  margin-bottom: 0 !important; /* 마진 제거 */
+  min-width: 0;           /* 찌그러짐 방지 */
+}
+
+/* 버튼 크기 고정 */
+.search-box button,
+.card.call-form button {
+  margin-bottom: 0 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* 모바일 대응: 600px 이하에서만 세로로 전환 */
+@media (max-width: 600px){
+  .card.call-form {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .card.call-form .input {
+    width: 100% !important;
+    margin-bottom: 8px !important;
+  }
+  .map{ height: 320px; }
+  .container{ padding: 8px; }
+}
 
 @media (max-width: 900px){
   .container{ padding: 12px; }
   .map{ height: 360px; }
 }
-@media (max-width: 600px){
-  .map{ height: 320px; }
-  .container{ padding: 8px; }
-}
+
+/* 마커 라벨 */
 .marker-label {
-  background-color: rgba(255, 255, 255, 0.9) !important; /* 배경 흰색 반투명 */
+  background-color: rgba(255, 255, 255, 0.9) !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
   border: 1px solid #ccc !important;
-  margin-top: -50px !important; /* 아이콘 머리 위로 위치 조정 (음수값으로 조절) */
-  white-space: nowrap !important; /* 이름이 길어도 줄바꿈 방지 */
+  margin-top: -50px !important;
+  white-space: nowrap !important;
 }
-

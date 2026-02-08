@@ -15,18 +15,12 @@ class MyHandler(SimpleHTTPRequestHandler):
         elif self.path.startswith("/admin"):
             self.path = "/admin.html"
         
-        # GPS 데이터 반환 (지도가 읽기 편하게 변환)
+        # GPS 데이터 반환: 원본 구조(deviceId가 키인 형태) 그대로 반환
         elif self.path == "/gps":
             if os.path.exists(GPS_FILE):
                 with open(GPS_FILE, "r", encoding="utf-8") as f:
-                    try:
-                        raw_data = json.load(f)
-                        refined_data = {}
-                        for dev_id, val in raw_data.items():
-                            # 지도는 '이름'을 키로 사용함
-                            refined_data[val['id']] = {"lat": val['lat'], "lng": val['lng']}
-                        gps_data = json.dumps(refined_data, ensure_ascii=False)
-                    except: gps_data = "{}"
+                    # 가공 로직을 삭제하고 파일 내용을 직접 읽어 전송합니다.
+                    gps_data = f.read() 
             else:
                 gps_data = "{}"
             self.send_response(200)
@@ -82,7 +76,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.send_response(200); self.end_headers()
             self.wfile.write(b"OK")
 
-        # 2. 택시 호출 저장 (에러 났던 부분)
+        # 2.  호출 저장 (에러 났던 부분)
         elif self.path == "/request":
             from_addr = data.get("from")
             to_addr = data.get("to")
@@ -100,7 +94,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 
             self.send_response(200)
             self.end_headers()
-            self.wfile.write("택시 호출이 완료되었습니다.".encode('utf-8'))
+            self.wfile.write(" 호출이 완료되었습니다.".encode('utf-8'))
 
         # 3. 호출 완료 처리
         elif self.path == "/done":
