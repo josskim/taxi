@@ -21,47 +21,56 @@
 </div>
 
 <script>
-let driverId = localStorage.getItem("driverId");
+// 1. 기기 고유 ID 생성 (없을 때만 생성하여 고정)
+let deviceId = localStorage.getItem("deviceId");
+if (!deviceId) {
+    deviceId = "dev_" + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("deviceId", deviceId);
+}
+
+let driverName = localStorage.getItem("driverName");
 
 function saveName(){
-  driverId = document.getElementById("name").value.trim();
-  if(driverId === "") return;
+  const nameInput = document.getElementById("name").value.trim();
+  if(nameInput === "") return;
 
-  localStorage.setItem("driverId", driverId);
+  localStorage.setItem("driverName", nameInput);
+  driverName = nameInput;
+  
   document.getElementById("setup").style.display = "none";
-  startGPS();   // 이름 저장 후에만 GPS 시작
+  startGPS();
 }
 
 function changeName(){
-  localStorage.removeItem("driverId");
+  localStorage.removeItem("driverName");
   location.reload();
 }
 
 function startGPS(){
-  if(!driverId){
+  if(!driverName){
     document.getElementById("setup").style.display = "block";
-    return;   // 🔥 이름 없으면 GPS 절대 시작 안함
+    return;
   }
 
-  document.getElementById("status").innerText = "기사 ["+driverId+"] 위치 전송중";
+  document.getElementById("status").innerText = "기사 ["+driverName+"] 위치 전송중";
 
-  setInterval(()=>{
-    navigator.geolocation.getCurrentPosition(pos=>{
+  setInterval(() => {
+    navigator.geolocation.getCurrentPosition(pos => {
       fetch('/gps', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          id: driverId,
+          deviceId: deviceId, // 기기 고유 키
+          id: driverName,     // 표시될 이름
           lat: pos.coords.latitude,
           lng: pos.coords.longitude
         })
       });
-    });
+    }, err => console.error(err), { enableHighAccuracy: true });
   }, 3000);
 }
 
 startGPS();
 </script>
-
 </body>
 </html>
