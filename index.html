@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>택시 호출</title>
+  <style>
+    /* 위 2번 스타일 복사 붙여넣기 */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 480px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f9faff;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    input, button {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      border: 1.5px solid #ccc;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #0078d7;
+      outline: none;
+    }
+
+    button {
+      background-color: #0078d7;
+      border: none;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 120, 215, 0.3);
+    }
+
+    button:hover {
+      background-color: #005a9e;
+    }
+
+    #msg {
+      text-align: center;
+      font-weight: 500;
+      min-height: 24px;
+      color: #e03e2f;
+    }
+  </style>
+</head>
+<body>
+
+
+<div id="map" style="height:400px;"></div>
+
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiNAdY2FCksg34Zy2PJmhSoclaIW-XFWI&callback=initMap" async defer></script>
+<script>
+let map;
+let markers = {};
+let infowindow;
+
+function initMap() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 17, //기존 14 → 16으로 상승 해서 4배더 확대함.  구글 맵 줌 레벨에서 1 증가하면 보이는 범위가 대략 2배 작아지므로 2단계 올리면 약 4배 더 확대된 셈입니다.
+    center: {lat: 35.7384, lng: 128.7334}
+  });
+
+  infowindow = new google.maps.InfoWindow();
+
+  loadGPS();
+  setInterval(loadGPS, 3000);
+}
+
+function getOffset(index) {
+  const offset = 0.00005;
+  return (index % 5) * offset;
+}
+
+function loadGPS() {
+  if (!map) {
+    console.warn("Map is not initialized yet");
+    return;
+  }
+
+  fetch('/gps')
+    .then(r => r.json())
+    .then(data => {
+      let i = 0;
+      for (let id in data) {
+        let baseLat = data[id].lat;
+        let baseLng = data[id].lng;
+
+        let pos = {
+          lat: baseLat + getOffset(i),
+          lng: baseLng + getOffset(i + 2)
+        };
+
+        let color = "#ff3b3b";
+
+        if (!markers[id]) {
+          let marker = new google.maps.Marker({
+            position: pos,
+            map: map,
+            label: {
+              text: id.substring(0, 1),
+              color: color,
+            },
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: color,
+              fillOpacity: 1,
+              strokeColor: "black",
+              strokeWeight: 2,
+            }
+          });
+
+          marker.addListener('click', () => {
+            infowindow.setContent(id + " 위치");
+            infowindow.open(map, marker);
+          });
+
+          markers[id] = marker;
+        } else {
+          markers[id].setPosition(pos);
+        }
+
+        i++;
+      }
+    })
+    .catch(e => console.error("GPS load error:", e));
+}
+
+</script>
+
+
+
+
+
+<h2>🚕 택시 호출</h2>
+
+<input id="from" type="text" placeholder="출발지 입력" autocomplete="off" />
+<input id="to" type="text" placeholder="도착지 입력" autocomplete="off" />
+<input id="phone" type="tel" placeholder="전화번호 입력" autocomplete="off" />
+
+<button onclick="send()">택시 호출하기</button>
+
+<p id="msg"></p>
+
+<script>
+  const fromInput = document.getElementById("from");
+  const toInput = document.getElementById("to");
+  const phoneInput = document.getElementById("phone");
+  const msg = document.getElementById("msg");
+
+  function send() {
+    const from = fromInput.value.trim();
+    const to = toInput.value.trim();
+    const phone = phoneInput.value.trim();
+
+    if (!from || !to || !phone) {
+      msg.style.color = "#e03e2f";
+      msg.innerText = "모든 항목을 입력해주세요.";
+      return;
+    }
+
+    fetch('/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, to, phone })
+    })
+      .then(r => r.text())
+      .then(t => {
+        msg.style.color = "#0078d7";
+        msg.innerText = t;
+
+        fromInput.value = "";
+        toInput.value = "";
+        phoneInput.value = "";
+      })
+      .catch(e => {
+        msg.style.color = "#e03e2f";
+        msg.innerText = "서버 요청 중 오류가 발생했습니다.";
+        console.error(e);
+      });
+  }
+</script>
+
+</body>
+</html>

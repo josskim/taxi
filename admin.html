@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>택시 접수 관리</title>
+<style>
+body { font-family: Arial; max-width: 700px; margin: 30px auto; }
+.card {
+  border:1px solid #ccc;
+  padding:15px;
+  margin:10px 0;
+}
+.card.completed {
+  background-color: #e0e0e0;  /* 연한 그레이 컬러 */
+  color: #777;               /* 회색 음영으로 텍스트 색상 변경 */
+  border-color: #999;         /* 테두리도 연하게 */
+}
+button { padding:8px 12px; }
+</style>
+</head>
+<body>
+
+<h3>기사 위치</h3>
+<div id="map" style="height:400px;"></div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiNAdY2FCksg34Zy2PJmhSoclaIW-XFWI&callback=initMap" async defer></script>
+<script>
+let map;
+let markers = {};
+let infowindow;
+
+function initMap() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 17, //기존 14 → 16으로 상승 해서 4배더 확대함.  구글 맵 줌 레벨에서 1 증가하면 보이는 범위가 대략 2배 작아지므로 2단계 올리면 약 4배 더 확대된 셈입니다.
+    center: {lat: 35.7384, lng: 128.7334}
+  });
+
+  infowindow = new google.maps.InfoWindow();
+
+  loadGPS();
+  setInterval(loadGPS, 3000);
+}
+
+function getOffset(index) {
+  const offset = 0.00005;
+  return (index % 5) * offset;
+}
+
+function loadGPS() {
+  if (!map) {
+    console.warn("Map is not initialized yet");
+    return;
+  }
+
+  fetch('/gps')
+    .then(r => r.json())
+    .then(data => {
+      let i = 0;
+      for (let id in data) {
+        let baseLat = data[id].lat;
+        let baseLng = data[id].lng;
+
+        let pos = {
+          lat: baseLat + getOffset(i),
+          lng: baseLng + getOffset(i + 2)
+        };
+
+        let color = "#ff3b3b";
+
+        if (!markers[id]) {
+          let marker = new google.maps.Marker({
+            position: pos,
+            map: map,
+            label: {
+              text: id.substring(0, 1),
+              color: color,
+            },
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: color,
+              fillOpacity: 1,
+              strokeColor: "black",
+              strokeWeight: 2,
+            }
+          });
+
+          marker.addListener('click', () => {
+            infowindow.setContent(id + " 위치");
+            infowindow.open(map, marker);
+          });
+
+          markers[id] = marker;
+        } else {
+          markers[id].setPosition(pos);
+        }
+
+        i++;
+      }
+    })
+    .catch(e => console.error("GPS load error:", e));
+}
+
+
+</script>
+
+
+
+<h2>📋 택시 접수 목록</h2>
+<div id="msg" style="min-height: 24px; margin-bottom: 10px; color:green;"></div>
+<div id="list"></div>
+
+<script>
+function load() {
+  fetch('/list')
+  .then(r => r.json())
+  .then(data => {
+    let html = '';
+    data.forEach((r, i) => {
+      html += `
+      <div class="card" data-index="${i}">
+        <b>출발:</b> ${r.from} <br>
+        <b>도착:</b> ${r.to} <br>
+        <b>전화:</b> ${r.phone} <br><br>
+        <button onclick="done(${i}, this)">완료</button>
+      </div>`;
+    });
+    list.innerHTML = html;
+  });
+}
+
+const msg = document.getElementById('msg');
+
+function done(i, btn) {
+  fetch('/done', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({index: i})
+  })
+  .then(r => r.text())
+  .then(text => {
+    // 완료 메시지 필요 시 표시 또는 console.log(text);
+
+    // 버튼이 속한 card div를 찾아 완료 스타일 적용
+    const cardDiv = btn.closest('.card');
+    if(cardDiv){
+      cardDiv.classList.add('completed');
+      // 버튼 비활성화 해버려도 좋음
+      btn.disabled = true;
+      btn.innerText = "완료됨";
+    }
+  })
+  .catch(e => {
+    console.error(e);
+    alert('완료 처리 중 오류가 발생했습니다.');
+  });
+}
+
+setInterval(load, 2000);
+load();
+</script>
+
+</body>
+</html>

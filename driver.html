@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>기사 위치 전송</title>
+</head>
+<body>
+
+<h2>🚕 기사 위치 전송</h2>
+
+<div id="setup" style="display:none;">
+  <p>기사 이름을 입력하세요</p>
+  <input id="name" placeholder="예: 스테이남천">
+  <button onclick="saveName()">확인</button>
+</div>
+
+<p id="status"></p>
+<button onclick="changeName()">기사 이름 변경</button>
+
+<script>
+let driverId = localStorage.getItem("driverId");
+
+function saveName(){
+  driverId = document.getElementById("name").value.trim();
+  if(driverId === "") return;
+
+  localStorage.setItem("driverId", driverId);
+  setup.style.display = "none";
+  startGPS();   // 이름 저장 후에만 GPS 시작
+}
+
+function changeName(){
+  localStorage.removeItem("driverId");
+  location.reload();
+}
+
+function startGPS(){
+  if(!driverId){
+    setup.style.display = "block";
+    return;   // 🔥 이름 없으면 GPS 절대 시작 안함
+  }
+
+  status.innerText = "기사 ["+driverId+"] 위치 전송중";
+
+  setInterval(()=>{
+    navigator.geolocation.getCurrentPosition(pos=>{
+      fetch('/gps', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          id: driverId,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        })
+      });
+    });
+  }, 3000);
+}
+
+startGPS();
+</script>
+
+</body>
+</html>
