@@ -45,16 +45,17 @@ function loadGPS() {
             position: pos,
             map: map,
             label: {
-              text: id.substring(0, 1),
-              color: color,
+              text: id, // "스테이남천", "종엽" 전체 이름 표시
+              color: "#333",
+              fontWeight: "bold",
+              fontSize: "12px",
+              className: "marker-label" // CSS에서 제어하기 위한 클래스명
             },
             icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: color,
-              fillOpacity: 1,
-              strokeColor: "black",
-              strokeWeight: 2,
+              url: "./image/man.png",
+              scaledSize: new google.maps.Size(40, 40),
+              origin: new google.maps.Point(0, 0),
+              anchor: new google.maps.Point(20, 40)
             }
           });
 
