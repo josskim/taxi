@@ -14,6 +14,9 @@ function initMap() {
   setInterval(loadGPS, 3000);
 }
 
+
+
+
 function getOffset(index) {
   const offset = 0.00005;
   return (index % 5) * offset;

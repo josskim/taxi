@@ -3,60 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>택시 호출</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>호출</title>
+  <link rel="stylesheet" href="style.css?v=1.2" />
 </head>
 <body>
   <div class="container">
-    <h2>🚕 택시 호출</h2>
+    <h2>🚕  호출</h2>
 
-    <div id="map" class="map" style="height:400px;"></div>
+    <!-- 위치 검색 UI 추가 -->
+    <div class="search-box">
+      <input id="searchName" type="text" placeholder="등록 이름 검색 (예: 스테이남천)" class="input" onkeyup="if(window.event.keyCode==13){searchDriver()}" />
+      <button onclick="searchDriver()" style="white-space: nowrap; width: 80px;">검색</button>
+    </div>
 
-    <div class="card" style="margin-top:12px;">
+    <div id="map" style="height:400px;"></div>
+
+    <div class="card call-form" style="margin-top:12px;">
       <input id="from" type="text" placeholder="출발지 입력" autocomplete="off" class="input" />
       <input id="to" type="text" placeholder="도착지 입력" autocomplete="off" class="input" />
       <input id="phone" type="tel" placeholder="전화번호 입력" autocomplete="off" class="input" />
-      <button onclick="send()">택시 호출하기</button>
+      <button onclick="send()"> 호출하기</button>
       <p id="msg"></p>
     </div>
   </div>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiNAdY2FCksg34Zy2PJmhSoclaIW-XFWI&callback=initMap" async defer></script>
 <script src="map-script.js"></script>
-
-<script>
-
-function send() {
-  const from = document.getElementById("from").value.trim();
-  const to = document.getElementById("to").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-
-  const msg = document.getElementById("msg");
-  if (!from || !to || !phone) {
-    msg.style.color = "#e03e2f";
-    msg.innerText = "모든 항목을 입력해주세요.";
-    return;
-  }
-
-  fetch('/request', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, phone })
-  })
-    .then(r => r.text())
-    .then(t => {
-      msg.style.color = "#0078d7";
-      msg.innerText = t;
-      document.getElementById("from").value = "";
-      document.getElementById("to").value = "";
-      document.getElementById("phone").value = "";
-    })
-    .catch(e => {
-      msg.style.color = "#e03e2f";
-      msg.innerText = "서버 요청 중 오류가 발생했습니다.";
-      console.error(e);
-    });
-}
-</script>
+<script src="form.js?v=3"></script>
 </body>
 </html>

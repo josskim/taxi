@@ -3,23 +3,37 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>기사 위치 전송</title>
-<link rel="stylesheet" href="style.css" />
+<title>위치 전송</title>
+<link rel="stylesheet" href="style.css?v=1.2" />
 </head>
 <body>
+
+
 <div class="container" style="max-width:600px; margin:0 auto; padding:8px;">
-  <h2>🚕 기사 위치 전송</h2>
+  <h2>🚕 위치 전송</h2>
+
+
+  <h3>위치</h3>
+
+  <div class="search-box">
+      <input id="searchName" type="text" placeholder="등록 이름 검색 (예: 스테이남천)" class="input" onkeyup="if(window.event.keyCode==13){searchDriver()}" />
+      <button onclick="searchDriver()" style="white-space: nowrap; width: 80px;">검색</button>
+    </div>
+  <div id="map" style="height:400px;"></div>
 
   <div id="setup" class="card" style="display:none;">
-    <p style="margin:0 0 8px;">기사 이름을 입력하세요</p>
+    <p style="margin:0 0 8px;">이름을 입력하세요</p>
     <input id="name" placeholder="예: 스테이남천" class="input" />
     <button onclick="saveName()">확인</button>
   </div>
 
   <p id="status" class="card" style="margin-top:8px; padding:10px 12px;"></p>
-  <button class="secondary" onclick="changeName()">기사 이름 변경</button>
+  <button class="secondary" onclick="changeName()">이름 변경</button>
 </div>
 
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiNAdY2FCksg34Zy2PJmhSoclaIW-XFWI&callback=initMap" async defer></script>
+<script src="map-script.js"></script>
+<script src="form.js?v=3"></script>
 <script>
 // 1. 기기 고유 ID 생성 (없을 때만 생성하여 고정)
 let deviceId = localStorage.getItem("deviceId");
@@ -52,7 +66,7 @@ function startGPS(){
     return;
   }
 
-  document.getElementById("status").innerText = "기사 ["+driverName+"] 위치 전송중";
+  document.getElementById("status").innerText = "["+driverName+"] 위치 전송중";
 
   setInterval(() => {
     navigator.geolocation.getCurrentPosition(pos => {
