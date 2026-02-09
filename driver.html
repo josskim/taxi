@@ -70,7 +70,7 @@ function startGPS(){
 
   setInterval(() => {
     navigator.geolocation.getCurrentPosition(pos => {
-      fetch('/gps', {
+      fetch('https://taxi.prahashop.shop/gps', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
